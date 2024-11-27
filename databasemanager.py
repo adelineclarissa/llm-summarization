@@ -117,6 +117,7 @@ class DatabaseManager:
 
 # Example usage
 if __name__ == "__main__":
+    load_dotenv()
     db_config = {
         "host": os.getenv("DB_HOST"),
         "user": os.getenv("DB_USER"),
@@ -130,7 +131,7 @@ if __name__ == "__main__":
 
     try:
         # NOTE: Modify the year here
-        year = 2024
+        year = 2023
         limit = 500
 
         # Fetch 100 data from the year 2024
