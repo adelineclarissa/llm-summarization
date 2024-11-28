@@ -4,6 +4,7 @@ import os
 from dotenv import load_dotenv
 from databaseconnection import DatabaseConnection
 from queryexecutor import QueryExecutor
+import openpyxl
 
 
 class DatabaseManager:
@@ -112,7 +113,43 @@ class DatabaseManager:
         )
 
         # save to excel
-        control_df.to_excel(f"control_{year}.xlsx", index=False)
+        excel_file_name = "control1.xlsx"
+
+        # Define headers
+        headers = [
+            "M13 ID",
+            "Name",
+            "Attitude",
+            "Level",
+            "City",
+            "Kecamatan",
+            "Status HP",
+            "Age (now)",
+            "Gender",
+        ]
+
+        if os.path.exists(excel_file_name):
+            # Load the existing workbook and select the active worksheet
+            wb = openpyxl.load_workbook(excel_file_name)
+            ws = wb.active
+
+            # Ensure the headers are consistent
+            existing_headers = [cell.value for cell in ws[1]]
+            if existing_headers != headers:
+                raise ValueError("Existing headers do not match the required headers!")
+        else:
+            # Create a new workbook and set up the sheet
+            wb = openpyxl.Workbook()
+            ws = wb.active
+            ws.title = "Control Data"
+            ws.append(headers)  # Add headers to the new sheet
+
+        # Append new data
+        for row in control_df.itertuples(index=False, name=None):
+            ws.append(row)
+
+        # Save the workbook
+        wb.save(excel_file_name)
 
 
 # Example usage
@@ -131,7 +168,7 @@ if __name__ == "__main__":
 
     try:
         # NOTE: Modify the year here
-        year = 2023
+        year = 2024
         limit = 500
 
         # Fetch 100 data from the year 2024
@@ -143,17 +180,17 @@ if __name__ == "__main__":
         db_manager.save_control_data_to_excel(df=df, year=year)
 
         # Save the conversations as plain texts
-        id_list = df["ticketid"].tolist()
-        for id_value in id_list:
-            df = db_manager.fetch_messages_by_ticketid(id_value)
-            if not df.empty:
-                name = db_manager.fetch_name_by_ticketid(id_value).to_string(
-                    index=False, header=False
-                )
-                db_manager.save_conversation_as_txt(
-                    df=df, ticket_id=id_value, contact_name=name
-                )
-            else:
-                print(f"No records found for ID: {id_value}")
+        # id_list = df["ticketid"].tolist()
+        # for id_value in id_list:
+        #     df = db_manager.fetch_messages_by_ticketid(id_value)
+        #     if not df.empty:
+        #         name = db_manager.fetch_name_by_ticketid(id_value).to_string(
+        #             index=False, header=False
+        #         )
+        #         db_manager.save_conversation_as_txt(
+        #             df=df, ticket_id=id_value, contact_name=name
+        #         )
+        #     else:
+        #         print(f"No records found for ID: {id_value}")
     finally:
         db_manager.close()

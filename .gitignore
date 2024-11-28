@@ -164,3 +164,8 @@ cython_debug/
 # Folders
 /messages
 /venv
+
+# Test related
+/test
+test.xlsx
+test.txt
