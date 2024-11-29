@@ -158,3 +158,10 @@ def get_file_id(file_path):
     else:
         logging.info("No match found.")
         return None
+
+
+def validate_excel(filename: str):
+    if ".xlsx" not in filename:
+        return filename + ".xlsx"
+    else:
+        return filename

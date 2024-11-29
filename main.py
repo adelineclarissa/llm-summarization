@@ -189,6 +189,7 @@ def prompt_openai(text, m13id):
 # Get input from console
 folder_path = input("Please enter folder path: ")
 excel_file = input("Please enter excel file for the output: ")
+excel_file = utility.validate_excel(filename=excel_file)
 
 # Initialize contacts
 contacts_list = []
