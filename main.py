@@ -5,6 +5,8 @@ import openai
 import os
 import utility
 from dotenv import load_dotenv
+from httpx import HTTPStatusError
+import time
 
 PHONE_PLACEHOLDER = "08123456789"
 NAME_PLACEHOLDER = "Tian"
@@ -52,137 +54,160 @@ openai.api_key = os.environ["OPENAI_API_KEY"]
 
 
 def prompt_openai(text, m13id):
-    try:
-        prompt = [
-            {
-                "role": "user",
-                "content": f"""
-    You are a staff member of a non-profit mission agency. Please disregard previous knowledge and focus only on the given conversation between another staff member and a potential contact for evangelization. Extract the following data points in JSON format in Indonesian, with the specified keys:
+    retries = 3
+    backoff_factor = 2  # Backoff multiplier for exponential backoff
+    delay = 1  # Initial delay in seconds
+    for attempt in range(retries):
+        try:
+            prompt = [
+                {
+                    "role": "user",
+                    "content": f"""
+        You are a staff member of a non-profit mission agency. Please disregard previous knowledge and focus only on the given conversation between another staff member and a potential contact for evangelization. Extract the following data points in JSON format in Indonesian, with the specified keys:
 
-    1. **name**: The name of the contact has been anonymized to 'Tian'. So Tian will be the name. 
-    2. **occupation**: The contact's current job or profession.
-    3. **education**: The highest level of education attained by the contact.
-    4. **age**: The age of the contact.
-    5. **handphone**: The contact's phone number.
-    6. **marriage**: The contact's marital status. The options are:
-        - **Lajang**: If the contact is single
-        - **Menikah**: If the contact is married
-        - **Janda/Duda**: If the contact is divorced or a widow/widower
-    7. **persona**: A detailed JSON object containing the following:
-    - **Initial problem**: The issue that first prompted the contact to reach out to the agency staff. This is typically found at the beginning of the conversation in the contact's first message.
-    - **Initial theme**: The theme associated with the initial problem. Choose from the following categories:
-        - **Spiritual (Rohani)**
-        - **Economy/Work (Ekonomi/Keuangan)**
-        - **Relationship/Family (Hubungan/Keluarga)**
-        - **Personal/Lifestyle (Personal/Gaya hidup)**
-        - **Health/Sickness (Kesehatan/Penyakit)**
-    - **Pressing problem**: The most urgent issue currently facing the contact. This could be the same as the initial problem or a different one.
-    - **Pressing theme**: The theme associated with the most pressing problem. Choose from the same categories as for the initial theme.
-    8. **gender**: The gender of the contact.
-    9. **address**: A breakdown of the contact's address, including:
-        - **Province**: The province in which the contact resides.
-        - **City**: The city or district (kota or kabupaten) where the contact lives.
-        - **Kecamatan**: The subdistrict where the contact lives.
-        - **Address**: Any additional specific details about the contact's location that can be inferred from the conversation.
-    10. **suku**: The ethnic group or tribe the contact belongs to, if mentioned.
-    11. **status hp**: How the contact's phone number can be contacted. The options are:
-    - **WA**: Chosen when the contact gives his/her phone number to the agent when requested. This is the most common case.
-    - **Both**: When the contact attempted to call the staff
-    - **Telp**: When the contact doesn't have Whatsapp (wa) and only can be contacted through regular phone call. This is the least common case.
-    12. **comments**: a short summary about the conversation. Please do not put any identifiable information in the summary. Please refer to the contact as 'COD'
-    13. **comments (IDN)**: **comments** but translated in Indonesian.
-    14. **attitude**: The general demeanor or attitude of the contact as inferred from the conversation. The options are:
-        - **Open (Terbuka)**
-        - **Not Open (Tidak Terbuka)**
-        - **Group (Kelompok)**: If the contact's family member or friend/s are also interested to learn about the gospel.
-    15. **recommendation**: A recommendation on how to approach or evangelize this person.
-    16. **extra info**: Any other additional information that is important for a staff person to know such as when the contact is available to be contacted or to meet in person, or any other information that is unique to the contact.
+        1. **name**: The name of the contact has been anonymized to 'Tian'. So Tian will be the name. 
+        2. **occupation**: The contact's current job or profession.
+        3. **education**: The highest level of education attained by the contact.
+        4. **age**: The age of the contact.
+        5. **handphone**: The contact's phone number.
+        6. **marriage**: The contact's marital status. The options are:
+            - **Lajang**: If the contact is single
+            - **Menikah**: If the contact is married
+            - **Janda/Duda**: If the contact is divorced or a widow/widower
+        7. **persona**: A detailed JSON object containing the following:
+        - **Initial problem**: The issue that first prompted the contact to reach out to the agency staff. This is typically found at the beginning of the conversation in the contact's first message.
+        - **Initial theme**: The theme associated with the initial problem. Choose from the following categories:
+            - **Spiritual (Rohani)**
+            - **Economy/Work (Ekonomi/Keuangan)**
+            - **Relationship/Family (Hubungan/Keluarga)**
+            - **Personal/Lifestyle (Personal/Gaya hidup)**
+            - **Health/Sickness (Kesehatan/Penyakit)**
+        - **Pressing problem**: The most urgent issue currently facing the contact. This could be the same as the initial problem or a different one.
+        - **Pressing theme**: The theme associated with the most pressing problem. Choose from the same categories as for the initial theme.
+        8. **gender**: The gender of the contact.
+        9. **address**: A breakdown of the contact's address, including:
+            - **Province**: The province in which the contact resides.
+            - **City**: The city or district (kota or kabupaten) where the contact lives.
+            - **Kecamatan**: The subdistrict where the contact lives.
+            - **Address**: Any additional specific details about the contact's location that can be inferred from the conversation.
+        10. **suku**: The ethnic group or tribe the contact belongs to, if mentioned.
+        11. **status hp**: How the contact's phone number can be contacted. The options are:
+        - **WA**: Chosen when the contact gives his/her phone number to the agent when requested. This is the most common case.
+        - **Both**: When the contact attempted to call the staff
+        - **Telp**: When the contact doesn't have Whatsapp (wa) and only can be contacted through regular phone call. This is the least common case.
+        12. **comments**: a short summary about the conversation. Please do not put any identifiable information in the summary. Please refer to the contact as 'COD'
+        13. **comments (IDN)**: **comments** but translated in Indonesian.
+        14. **attitude**: The general demeanor or attitude of the contact as inferred from the conversation. The options are:
+            - **Open (Terbuka)**
+            - **Not Open (Tidak Terbuka)**
+            - **Group (Kelompok)**: If the contact's family member or friend/s are also interested to learn about the gospel.
+        15. **recommendation**: A recommendation on how to approach or evangelize this person.
+        16. **extra info**: Any other additional information that is important for a staff person to know such as when the contact is available to be contacted or to meet in person, or any other information that is unique to the contact.
 
-    For each field, please provide the reasoning behind your answer, explaining why you believe it to be correct. Additionally, indicate your level of confidence in your answer, specifying a percentage or scale to represent the probability this answer might be correct based on the information you have at hand.
+        For each field, please provide the reasoning behind your answer, explaining why you believe it to be correct. Additionally, indicate your level of confidence in your answer, specifying a percentage or scale to represent the probability this answer might be correct based on the information you have at hand.
 
-    Please return the data in the following JSON format:
-    {{
-        "name_result": "",
-        "name_reasoning": "",
-        "name_confidence": "",
-        "occupation_result": "",
-        "occupation_reasoning": "",
-        "occupation_confidence": "",
-        "education_result": "",
-        "education_reasoning": "",
-        "education_confidence": "",
-        "age_result": "",
-        "age_reasoning": "",
-        "age_confidence": "",
-        "handphone_result": "",
-        "handphone_reasoning": "",
-        "handphone_confidence": "",
-        "marriage_result": "",
-        "marriage_reasoning": "",
-        "marriage_confidence": "",
-        "persona_initial_problem": "",
-        "persona_initial_theme": "",
-        "persona_pressing_problem": "",
-        "persona_pressing_theme": "",
-        "gender_result": "",
-        "gender_reasoning": "",
-        "gender_confidence": "",
-        "address_province_result": "",
-        "address_province_reasoning": "",
-        "address_province_confidence": "",
-        "address_city_result": "",
-        "address_city_reasoning": "",
-        "address_city_confidence": "",
-        "address_kecamatan_result": "",
-        "address_kecamatan_reasoning": "",
-        "address_kecamatan_confidence": "",
-        "address_detail_result": "",
-        "address_detail_reasoning": "",
-        "address_detail_confidence": "",
-        "suku_result": "",
-        "suku_reasoning": "",
-        "suku_confidence": "",
-        "status_hp_result": "",
-        "status_hp_reasoning": "",
-        "status_hp_confidence": "",
-        "attitude_result": "",
-        "attitude_reasoning": "",
-        "attitude_confidence": "",
-        "comments": "",
-        "comments_idn": "",
-        "recommendation": "",
-        "extra_info": ""
-    }}
+        Please return the data in the following JSON format:
+        {{
+            "name_result": "",
+            "name_reasoning": "",
+            "name_confidence": "",
+            "occupation_result": "",
+            "occupation_reasoning": "",
+            "occupation_confidence": "",
+            "education_result": "",
+            "education_reasoning": "",
+            "education_confidence": "",
+            "age_result": "",
+            "age_reasoning": "",
+            "age_confidence": "",
+            "handphone_result": "",
+            "handphone_reasoning": "",
+            "handphone_confidence": "",
+            "marriage_result": "",
+            "marriage_reasoning": "",
+            "marriage_confidence": "",
+            "persona_initial_problem": "",
+            "persona_initial_theme": "",
+            "persona_pressing_problem": "",
+            "persona_pressing_theme": "",
+            "gender_result": "",
+            "gender_reasoning": "",
+            "gender_confidence": "",
+            "address_province_result": "",
+            "address_province_reasoning": "",
+            "address_province_confidence": "",
+            "address_city_result": "",
+            "address_city_reasoning": "",
+            "address_city_confidence": "",
+            "address_kecamatan_result": "",
+            "address_kecamatan_reasoning": "",
+            "address_kecamatan_confidence": "",
+            "address_detail_result": "",
+            "address_detail_reasoning": "",
+            "address_detail_confidence": "",
+            "suku_result": "",
+            "suku_reasoning": "",
+            "suku_confidence": "",
+            "status_hp_result": "",
+            "status_hp_reasoning": "",
+            "status_hp_confidence": "",
+            "attitude_result": "",
+            "attitude_reasoning": "",
+            "attitude_confidence": "",
+            "comments": "",
+            "comments_idn": "",
+            "recommendation": "",
+            "extra_info": ""
+        }}
 
-    Please make sure that the JSON formatting is valid. Do not include anything else than the valid JSON format.
+        Please make sure that the JSON formatting is valid. Do not include anything else than the valid JSON format.
 
-    Text: {text}
+        Text: {text}
 
-    """,
-            }
-        ]
-        completion = client_openai.chat.completions.create(
-            model="gpt-4o",
-            messages=prompt,
-        )
-        output = completion.choices[0].message.content
-        logging.debug(output)
-        return output
-
-    except openai.error.InvalidRequestError as e:
-        if "maximum context length" in str(e):  # Check if the error is token-related
-            print(
-                f"Error: Input text exceeds the token limit for conversation ID: {m13id}."
+        """,
+                }
+            ]
+            completion = client_openai.chat.completions.create(
+                model="gpt-4o",
+                messages=prompt,
             )
-            print("Please clean up the text and try again.")
-            return None
-        else:
-            print(
-                f"An unexpected error occurred for conversation ID: {m13id}. Error: {e}"
-            )
-            return None
-    except Exception as e:
-        print(f"A general error occurred for conversation ID: {m13id}. Error: {e}")
+            output = completion.choices[0].message.content
+            logging.debug(output)
+            return output
+        except openai.APIError.InvalidRequestError as e:
+            if "maximum context length" in str(
+                e
+            ):  # Check if the error is token-related
+                print(
+                    f"Error: Input text exceeds the token limit for conversation ID: {m13id}."
+                )
+                print("Please clean up the text and try again.")
+                return None
+            else:
+                print(
+                    f"An unexpected error occurred for conversation ID: {m13id}. Error: {e}"
+                )
+                return None
+        except HTTPStatusError as e:
+            if e.response.status_code == 429:
+                logging.error(
+                    f"Rate limit exceeded for conversation ID: {m13id}. Attempt {attempt + 1} of {retries}."
+                )
+                if attempt < retries - 1:
+                    time.sleep(delay)  # Wait before retrying
+                    delay *= backoff_factor  # Exponential backoff
+                else:
+                    logging.error(
+                        f"All retry attempts failed for conversation ID: {m13id}. Please wait and try again later."
+                    )
+                    return None
+            else:
+                logging.error(
+                    f"HTTP error for conversation ID: {m13id}. Status: {e.response.status_code}. Error: {e}"
+                )
+                return None
+        except Exception as e:
+            print(f"A general error occurred for conversation ID: {m13id}. Error: {e}")
         return None
 
 
@@ -227,7 +252,8 @@ for file_name in os.listdir(folder_path):
                     original_conversation, name
                 )
                 print(anonymized_text)
-                output = prompt_openai(anonymized_text, m13id)
+                cleaned_text = utility.clean_html_styling(anonymized_text)
+                output = prompt_openai(cleaned_text, m13id)
                 print(output)
 
                 # Clean up JSON string

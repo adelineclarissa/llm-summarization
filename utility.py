@@ -4,6 +4,7 @@ import logging
 import os
 import openpyxl
 import re
+from bs4 import BeautifulSoup
 
 logging.basicConfig(
     level=logging.DEBUG,  # Set the logging level to DEBUG to capture all messages
@@ -165,3 +166,8 @@ def validate_excel(filename: str):
         return filename + ".xlsx"
     else:
         return filename
+
+
+def clean_html_styling(conversation_text):
+    soup = BeautifulSoup(conversation_text, "html.parser")
+    return soup.get_text()
