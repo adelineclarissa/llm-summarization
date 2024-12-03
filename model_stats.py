@@ -11,6 +11,14 @@ logging.basicConfig(
 )
 
 
+def normalize_level(term):
+    if str(term).upper() == "KABUPATEN":
+        term = "Kab."
+    if str(term).upper() == "KOTA":
+        term = "Kota"
+    return term
+
+
 def normalize_attitude(term):
     if str(term.lower()) == "open":
         term = "Open (Terbuka)"
@@ -110,7 +118,11 @@ def compare_columns(df1, df2, headers):
                     value1 = normalize_attitude(value1)
                     value2 = normalize_attitude(value2)
 
-                logging.debug(f"Inference: {value1}, Control: {value2}")
+                if header.lower() == "level":
+                    value1 = normalize_level(value1)
+                    value2 = normalize_level(value2)
+
+                # logging.debug(f"Inference: {value1}, Control: {value2}")
 
                 # Increment the total comparisons counter
                 total_comparisons += 1
