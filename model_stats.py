@@ -3,6 +3,7 @@ import inquirer
 import logging
 import re
 import argparse
+from utility import validate_excel
 
 # Configure logging
 logging.basicConfig(
@@ -138,13 +139,6 @@ def compare_columns(df1, df2, headers):
             accuracy_per_category[header] = None  # No comparisons made for this header
 
     return accuracy_per_category
-
-
-def validate_excel(filename: str):
-    if ".xlsx" not in filename:
-        filename = filename + ".xlsx"
-
-    return "output/" + filename
 
 
 def main(args):
