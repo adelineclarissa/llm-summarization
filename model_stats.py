@@ -16,6 +16,8 @@ def normalize_gender(term):
         return "Wanita (Female)"
     if str(term).lower() == "laki-laki":
         return "Pria (Male)"
+    else:
+        return term
 
 
 def normalize_level(term):

@@ -168,7 +168,7 @@ def prompt_openai(text, m13id):
                 }
             ]
             completion = client_openai.chat.completions.create(
-                model="gpt-4o",
+                model="gpt-4o-mini",
                 messages=prompt,
             )
             output = completion.choices[0].message.content
