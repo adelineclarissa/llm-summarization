@@ -11,6 +11,13 @@ logging.basicConfig(
 )
 
 
+def normalize_gender(term):
+    if str(term).lower() == "perempuan":
+        return "Wanita (Female)"
+    if str(term).lower() == "laki-laki":
+        return "Pria (Male)"
+
+
 def normalize_level(term):
     if str(term).upper() == "KABUPATEN":
         term = "Kab."
@@ -121,6 +128,10 @@ def compare_columns(df1, df2, headers):
                 if header.lower() == "level":
                     value1 = normalize_level(value1)
                     value2 = normalize_level(value2)
+
+                if header.lower() == "gender":
+                    value1 = normalize_gender(value1)
+                    value2 = normalize_gender(value2)
 
                 # logging.debug(f"Inference: {value1}, Control: {value2}")
 
