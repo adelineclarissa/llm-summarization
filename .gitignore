@@ -162,7 +162,7 @@ cython_debug/
 #.idea/
 
 # Folders
-/messages
+messages*/
 /venv
 
 # Test related
