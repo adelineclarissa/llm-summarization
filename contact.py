@@ -1,6 +1,6 @@
 from enum import Enum
 import pandas as pd
-import json
+from dataclasses import dataclass, field
 
 
 class Category(Enum):
@@ -10,182 +10,42 @@ class Category(Enum):
     DESA = "desa"
 
 
+@dataclass
 class Contact:
-    def __init__(self, **kwargs):
-        self._id = kwargs.get("id", "")
-        self._name = kwargs.get("name", "")
-        self._phone_number = kwargs.get("phone_number", "")
-        self._gender = kwargs.get("gender", "")
-        self._age = kwargs.get("age", "")
-        self._education = kwargs.get("education", "")
-        self._occupation = kwargs.get("occupation", "")
-        self._marriage = kwargs.get("marriage", "")
-        self._attitude = kwargs.get("attitude", "")
-        self._persona = kwargs.get("persona", "")
-        self._summary = kwargs.get("summary", "")
-        self._extra_info = kwargs.get("extra_info", "")
-        self._status_hp = kwargs.get("status_hp", "")
-        self._suku = kwargs.get("suku", "")
-        self._province = kwargs.get("province", "")
-        self._city = kwargs.get("city", "")
-        self._kecamatan = kwargs.get("kecamatan", "")
-        self._address = kwargs.get("address", "")  # Specific address like desa
-        self._level = None
-        self._df_database = None
-        self.init_level()
-
-    def __repr__(self):
-        return f"Contact(name={self._name}, phone_number={self._phone_number}, gender={self._gender})"
-
-    @property
-    def id(self):
-        return self._id
-
-    @id.setter
-    def id(self, value):
-        self._id = value
-
-    @property
-    def suku(self):
-        return self._suku
-
-    @suku.setter
-    def suku(self, value):
-        self._suku = value
-
-    @property
-    def status_hp(self):
-        return self._status_hp
-
-    @status_hp.setter
-    def status_hp(self, value):
-        self._status_hp = value
-
-    @property
-    def name(self):
-        return self._name
-
-    @name.setter
-    def name(self, value):
-        self._name = value
-
-    @property
-    def phone_number(self):
-        return self._phone_number
-
-    @phone_number.setter
-    def phone_number(self, value):
-        self._phone_number = value
-
-    @property
-    def gender(self):
-        return self._gender
-
-    @gender.setter
-    def gender(self, value):
-        self._gender = value
-
-    @property
-    def age(self):
-        return self._age
-
-    @age.setter
-    def age(self, value):
-        self._age = value
-
-    @property
-    def education(self):
-        return self._education
-
-    @education.setter
-    def education(self, value):
-        self._education = value
-
-    @property
-    def occupation(self):
-        return self._occupation
-
-    @occupation.setter
-    def occupation(self, value):
-        self._occupation = value
-
-    @property
-    def marriage(self):
-        return self._marriage
-
-    @marriage.setter
-    def marriage(self, value):
-        self._marriage = value
-
-    @property
-    def attitude(self):
-        return self._attitude
-
-    @attitude.setter
-    def attitude(self, value):
-        self._attitude = value
-
-    @property
-    def persona(self):
-        return self._persona
-
-    @persona.setter
-    def persona(self, value):
-        self._persona = value
-
-    @property
-    def summary(self):
-        return self._summary
-
-    @summary.setter
-    def summary(self, value):
-        self._summary = value
-
-    @property
-    def extra_info(self):
-        return self._extra_info
-
-    @extra_info.setter
-    def extra_info(self, value):
-        self._extra_info = value
-
-    @property
-    def province(self):
-        return self._province
-
-    @province.setter
-    def province(self, value):
-        self._province = value
-
-    @property
-    def city(self):
-        return self._city
-
-    @city.setter
-    def city(self, value):
-        self._city = value
-
-    @property
-    def kecamatan(self):
-        return self._kecamatan
-
-    @kecamatan.setter
-    def kecamatan(self, value):
-        self._kecamatan = value
-
-    @property
-    def address(self):
-        return self._address
-
-    @address.setter
-    def address(self, value):
-        self._address = value
+    id: str = ""
+    name: str = ""
+    phone_number: str = ""
+    gender: str = ""
+    age: str = ""
+    education: str = ""
+    occupation: str = ""
+    marriage: str = ""
+    attitude: str = ""
+    persona: str = ""
+    summary: str = ""
+    extra_info: str = ""
+    status_hp: str = ""
+    suku: str = ""
+    province: str = ""
+    city: str = ""
+    kecamatan: str = ""
+    address: str = ""
+    level: str = field(init=False, default=None)
+    _df_database: pd.DataFrame = field(init=False, default=None)
 
     @property
     def level(self):
         if self._level == None:
             self.init_level()  # finds the level and set self._level
         return self._level
+
+    _kota_kab_db = None
+
+    @staticmethod
+    def load_districts():
+        if Contact._kota_kab_db is None:
+            Contact._kota_kab_db = pd.read_csv("kota_kab.csv")
+        return Contact._kota_kab_db
 
     # Private methods
     def _find_level(self, city):
