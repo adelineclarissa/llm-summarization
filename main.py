@@ -247,6 +247,9 @@ if __name__ == "__main__":
                 name = name_df.to_string(index=False, header=False)
                 print(f"COD Name: {name}")
 
+                # LOG: output for json dump
+                output = ""
+
                 with open(file_path, "r") as file:
                     original_conversation = file.read()
                     anonymized_text, original_name, original_phone = anonymize(
@@ -283,6 +286,11 @@ if __name__ == "__main__":
                     utility.contacts_to_excel(
                         contacts=[contact], excel_file_name=excel_file
                     )
+
+                # LOG: output json dump into a txt file
+                dumpfile = f"test-output-dump/{m13id}-dump.txt"
+                with open(dumpfile, "w") as f:
+                    f.write(output)
 
                 # Increment the counter and print progress
                 processed_files += 1

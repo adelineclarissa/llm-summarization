@@ -1,6 +1,7 @@
 from enum import Enum
 import pandas as pd
 from dataclasses import dataclass, field
+import logging
 
 
 class Category(Enum):
@@ -39,35 +40,43 @@ class Contact:
             self.init_level()  # finds the level and set self._level
         return self._level
 
-    _kota_kab_db = None
+    _kota_kab_df = None
 
     @staticmethod
     def load_districts():
-        if Contact._kota_kab_db is None:
-            Contact._kota_kab_db = pd.read_csv("kota_kab.csv")
-        return Contact._kota_kab_db
+        if Contact._kota_kab_df is None:
+            Contact._kota_kab_df = pd.read_csv("kota_kab.csv")
+        return Contact._kota_kab_df
 
     # Private methods
     def _find_level(self, city):
-        # A helper function to find the level
+        """A helper function to determine the level of a district (kota or kabupaten) based on the provided city name"""
+
         if city is None:
             return None
-        # if variable district has 'kota'
+
+        # Normalize the name if variable district has 'kota'
         if city.lower().split()[0] == "kota":
-            # remove the first word
             city = " ".join(city.split()[1:])
-        df = pd.read_csv("kota_kab.csv")
+
+        # Read the dataset
+        df = self.load_districts()
+
+        # Extract district names and levels
         str_district = df["name"].str.upper()
         words = str_district.str.split()
         name = words.apply(lambda x: " ".join(x[1:]))
+
+        # Find the match in the dataset
         match_index = name.str.lower() == city.lower()
         if match_index.any():  # Check if any match is found
             index = match_index.idxmax()
             district_level = words[index][0]
             # print(f"The level of district {district} is {district_level}")
+            logging.info(f"Match found: {city} is a {district_level}")
             return district_level
         else:
-            print(f"City {city} not found in the dataset.")
+            logging.warning(f"City {city} not found in the dataset.")
             return None
 
     def _validate(self, addr_input, category: Category):
@@ -136,7 +145,7 @@ class Contact:
 
     def init_level(self):
         if self._kecamatan == "" or self._kecamatan == None:
-            # print("self._kecamatan is empty or None")
+            logging.warning("self._kecamatan is empty or None")
             return
         kecamatan_input = self._kecamatan
 
