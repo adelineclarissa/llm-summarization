@@ -45,9 +45,37 @@ def parse_json_to_contact(json_data):
 
         return Contact(**contact_info)
     except json.decoder.JSONDecodeError as e:
-        logging.error(f"Encountered an error when parsing the JSON: {e}")
+        # Extract the line and column that caused the error
+        lines = json_data.splitlines()
+        error_line = lines[
+            e.lineno - 1
+        ]  # Get the line where the error occurred (e.lineno is 1-based)
+        column_error = e.colno  # Column number where the error occurred
+
+        # Log the error with detailed information, including the exact line and column content
+        logging.error(
+            "Failed to parse JSON data into a Contact object. "
+            "The provided data might be malformed or incomplete. "
+            f"Error: {e.msg} at line {e.lineno}, column {e.colno}. "
+            f"Problematic line: '{error_line.strip()}'"
+            f"\n{' ' * (column_error - 1)}^ <-- Error at column {column_error}. "
+            "Input data (up to 200 chars): %s",
+            json_data[
+                :200
+            ],  # Log the first 200 characters of the JSON data for context
+        )
+    except KeyError as e:
+        # If a key is missing from the expected JSON structure, log that error explicitly
+        logging.error(
+            f"Missing expected key in the parsed JSON data: {e}. "
+            f"Input data: {json_data[:200]}"  # Log the first 200 characters of the JSON data
+        )
     except Exception as e:
-        logging.error(f"Error parsing JSON to contact: {e}")
+        # Catch any other general errors and log them
+        logging.error(
+            f"An unexpected error occurred when processing the JSON data. Error: {e}. "
+            f"Input data: {json_data[:200]}"  # Log the first 200 characters of the JSON data
+        )
     return None  # This will cause error
 
 
@@ -92,25 +120,25 @@ def contacts_to_excel(contacts, excel_file_name):
             logging.error("Contact is None in contacts_to_excel. Skipping...")
             continue
         row_data = [
-            str(contact._id),
-            str(contact._name),
-            str(contact._attitude),
-            str(contact._phone_number),
-            str(contact._persona),
-            str(contact._status_hp),
-            str(contact._suku),
-            str(contact._gender),
-            str(contact._province),
-            str(contact._age),
-            str(contact.level),
-            str(contact._education),
-            str(contact._city),
-            str(contact._occupation),
-            str(contact._kecamatan),
-            str(contact._marriage),
-            str(contact._address),
-            str(contact._extra_info),
-            str(contact._summary),
+            str(contact.id),
+            str(contact.name),
+            str(contact.attitude),
+            str(contact.phone_number),
+            str(contact.persona),
+            str(contact.status_hp),
+            str(contact.suku),
+            str(contact.gender),
+            str(contact.province),
+            str(contact.age),
+            str(contact.level),  # 'level' is now directly accessed as a property
+            str(contact.education),
+            str(contact.city),
+            str(contact.occupation),
+            str(contact.kecamatan),
+            str(contact.marriage),
+            str(contact.address),
+            str(contact.extra_info),
+            str(contact.summary),
         ]
         ws.append(row_data)
 
@@ -141,7 +169,20 @@ def clean_json(input_string):
     try:
         start = input_string.index("{")
         end = input_string.rindex("}")
-        return input_string[start : end + 1]
+
+        cleaned_string = input_string[start : end + 1]
+
+        # Check for a comma before the closing `}`
+        # Strip spaces from the end to find the character before the `}`
+        trimmed_before_closing = cleaned_string[: end - start].rstrip()
+
+        # If the character before the final `}` is a comma, remove it
+        if trimmed_before_closing[-1] == ",":
+            # Remove the trailing comma and restore the `}`
+            cleaned_string = trimmed_before_closing[:-1] + "}"
+
+        return cleaned_string
+
     except ValueError:
         # If `{` or `}` is not found, return an empty string
         return ""

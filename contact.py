@@ -31,14 +31,17 @@ class Contact:
     city: str = ""
     kecamatan: str = ""
     address: str = ""
-    level: str = field(init=False, default=None)
     _df_database: pd.DataFrame = field(init=False, default=None)
 
     @property
     def level(self):
-        if self._level == None:
-            self.init_level()  # finds the level and set self._level
+        if not hasattr(self, "_level"):  # Check if `_level` exists
+            self.init_level()
         return self._level
+
+    @level.setter
+    def level(self, value):
+        self._level = value
 
     _kota_kab_df = None
 
@@ -49,15 +52,21 @@ class Contact:
         return Contact._kota_kab_df
 
     # Private methods
-    def _find_level(self, city):
+    def _find_level(self, kota_kab_result):
         """A helper function to determine the level of a district (kota or kabupaten) based on the provided city name"""
 
-        if city is None:
+        if kota_kab_result is None:
             return None
 
         # Normalize the name if variable district has 'kota'
-        if city.lower().split()[0] == "kota":
-            city = " ".join(city.split()[1:])
+        # logging.debug(f"Before normalization: {city}")
+        # if city.lower().split()[0] == "kota":
+        #     city = " ".join(city.split()[1:])
+        # logging.debug(f"After normalization: {city}")
+
+        # BYPASS: if kota_kab_result has "kota", return the level as kota
+        if kota_kab_result.lower().split()[0] == "kota":
+            return "KOTA"
 
         # Read the dataset
         df = self.load_districts()
@@ -68,15 +77,15 @@ class Contact:
         name = words.apply(lambda x: " ".join(x[1:]))
 
         # Find the match in the dataset
-        match_index = name.str.lower() == city.lower()
+        match_index = name.str.lower() == kota_kab_result.lower()
         if match_index.any():  # Check if any match is found
             index = match_index.idxmax()
             district_level = words[index][0]
             # print(f"The level of district {district} is {district_level}")
-            logging.info(f"Match found: {city} is a {district_level}")
+            logging.info(f"Match found: {kota_kab_result} is a {district_level}")
             return district_level
         else:
-            logging.warning(f"City {city} not found in the dataset.")
+            logging.warning(f"City {kota_kab_result} not found in the dataset.")
             return None
 
     def _validate(self, addr_input, category: Category):
@@ -144,10 +153,10 @@ class Contact:
         return self._find_level(district)
 
     def init_level(self):
-        if self._kecamatan == "" or self._kecamatan == None:
-            logging.warning("self._kecamatan is empty or None")
+        if self.kecamatan == "" or self.kecamatan == None:
+            logging.warning("self.kecamatan is empty or None")
             return
-        kecamatan_input = self._kecamatan
+        kecamatan_input = self.kecamatan
 
         if self._df_database is None:
             self.init_db()
@@ -173,6 +182,7 @@ class Contact:
         if isValid:
             # find level
             kota_kab_result = district_df.iloc[0]["admin2Name_en"]
+            logging.info(f"Mencari level dari kota/kab {str(kota_kab_result)}")
             level = self._find_level(kota_kab_result)
         else:
             level = None
@@ -184,13 +194,13 @@ class Contact:
                 if is_valid:
                     print(f"Found match in category: {category}")
                     if category == Category.PROVINCE:
-                        self._province = kecamatan_input
+                        self.province = kecamatan_input
                     elif category == Category.CITY:
-                        self._city = kecamatan_input
+                        self.city = kecamatan_input
                     elif category == Category.KECAMATAN:
-                        self._kecamatan = kecamatan_input
+                        self.kecamatan = kecamatan_input
                     elif category == Category.DESA:
-                        self._address = kecamatan_input
+                        self.address = kecamatan_input
 
                     # Debug
                     print(f"Change field {category} to {kecamatan_input}")
@@ -200,24 +210,3 @@ class Contact:
                 return
 
         self._level = level
-
-    def print_info(self):
-        print(f"ID: {self._id}")
-        print(f"Name: {self._name}")
-        print(f"Phone Number: {self._phone_number}")
-        print(f"Gender: {self._gender}")
-        print(f"Age: {self._age}")
-        print(f"Education: {self._education}")
-        print(f"Occupation: {self._occupation}")
-        print(f"Marital Status: {self._marriage}")
-        print(f"Attitude: {self._attitude}")
-        print(f"Persona: {self._persona}")
-        print(f"Summary: {self._summary}")
-        print(f"Extra Info: {self._extra_info}")
-        print(f"Status HP: {self._status_hp}")
-        print(f"Suku: {self._suku}")
-        print(f"Province: {self._province}")
-        print(f"City: {self._city}")
-        print(f"Kecamatan: {self._kecamatan}")
-        print(f"Address: {self._address}")
-        print(f"Level: {self._level}")

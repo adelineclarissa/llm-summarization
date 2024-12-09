@@ -245,7 +245,6 @@ if __name__ == "__main__":
                 db_manager.connect()
                 name_df = db_manager.fetch_name_by_m13(m13id=m13id)
                 name = name_df.to_string(index=False, header=False)
-                print(f"COD Name: {name}")
 
                 # LOG: output for json dump
                 output = ""
@@ -255,10 +254,10 @@ if __name__ == "__main__":
                     anonymized_text, original_name, original_phone = anonymize(
                         original_conversation, name
                     )
-                    print(anonymized_text)
+                    # print(anonymized_text)
                     cleaned_text = utility.clean_html_styling(anonymized_text)
                     output = prompt_openai(cleaned_text, m13id)
-                    print(output)
+                    # print(output)
 
                     # Clean up JSON string
                     output = utility.clean_json(input_string=output)
@@ -271,7 +270,7 @@ if __name__ == "__main__":
                     # Update the original name and phone number in the contact object
                     # Safeguard against errors if name/phone number not properly anonymized
                     if contact is not None:
-                        contact.id = m13id
+                        contact.id = m13id  # IMPORTANT
                         if contact.name == NAME_PLACEHOLDER:
                             logging.debug(
                                 f"Changed {contact.name} into {original_name}"
@@ -292,11 +291,11 @@ if __name__ == "__main__":
                 with open(dumpfile, "w") as f:
                     f.write(output)
 
-                # Increment the counter and print progress
+                # Increment the counter and log the progress
                 processed_files += 1
-                print(f"Processed {processed_files}/{total_files} files.")
+                logging.info(f"Processed {processed_files}/{total_files} files.")
 
             except Exception as e:
                 logging.error(f"Error processing file {file_name}: {e}")
 
-    print(f"Completed processing {processed_files} out of {total_files} files.")
+    logging.info(f"Completed processing {processed_files} out of {total_files} files.")
