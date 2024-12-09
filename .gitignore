@@ -166,7 +166,6 @@ messages*/
 /venv
 
 # Test related
-/test
+test*/
 test.xlsx
 test.txt
-/stats_test
