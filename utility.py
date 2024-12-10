@@ -5,6 +5,8 @@ import os
 import openpyxl
 import re
 from bs4 import BeautifulSoup
+from typing import List
+from rapidfuzz import process
 
 logging.basicConfig(
     level=logging.DEBUG,  # Set the logging level to DEBUG to capture all messages
@@ -212,3 +214,10 @@ def validate_excel(filename: str):
 def clean_html_styling(conversation_text):
     soup = BeautifulSoup(conversation_text, "html.parser")
     return soup.get_text()
+
+
+def fuzzy_search(keyword: str, column: List[str]):
+    match = process.extractOne(keyword, column)
+    if match:
+        return match[0]
+    return ""

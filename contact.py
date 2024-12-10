@@ -33,6 +33,8 @@ class Contact:
     address: str = ""
     _df_database: pd.DataFrame = field(init=False, default=None)
 
+    _level = None  # Initialize level
+
     @property
     def level(self):
         if not hasattr(self, "_level"):  # Check if `_level` exists
