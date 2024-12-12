@@ -1,4 +1,8 @@
 import mysql.connector
+from utility import setup_logging
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class DatabaseConnection:
@@ -11,16 +15,16 @@ class DatabaseConnection:
         try:
             self.connection = mysql.connector.connect(**self.config)
             if self.connection.is_connected():
-                print("Successfully connected to the database.")
+                logger.info("Successfully connected to the database.")
         except Exception as e:
-            print(f"Error connecting to the database: {e}")
+            logger.error(f"Error connecting to the database: {e}")
             self.connection = None
 
     def close(self):
         """Close the database connection."""
         if self.connection and self.connection.is_connected():
             self.connection.close()
-            print("Database connection closed.")
+            logger.info("Database connection closed.")
 
     def is_connected(self):
         """Check if the connection is still active."""

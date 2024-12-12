@@ -7,9 +7,12 @@ import utility
 from dotenv import load_dotenv
 from httpx import HTTPStatusError
 import time
+from utility import setup_logging
 
 PHONE_PLACEHOLDER = "08123456789"
 NAME_PLACEHOLDER = "Tian"
+
+setup_logging(logfile="main")
 
 
 # Anonymizes a full name in a conversation, accounting for first, middle (if any), and last names.
@@ -19,19 +22,6 @@ def anonymize(
     name_placeholder=NAME_PLACEHOLDER,
     phone_placeholder=PHONE_PLACEHOLDER,
 ):
-    """
-    Anonymizes a conversation by replacing occurrences of a name and phone numbers.
-    Stores original phone numbers in a list.
-
-    :param conversation: The original conversation text (str).
-    :param original_name: The full name to anonymize (str), e.g., "John Michael Doe".
-    :param name_placeholder: The placeholder to replace the name with (default is "Anonymous").
-    :param phone_placeholder: The placeholder to replace phone numbers with (default is "08123456789").
-    :return: A tuple containing:
-             - Anonymized conversation (str)
-             - The original name (str)
-             - List of original phone numbers (list)
-    """
 
     # Split the name into components (first, middle, last)
     name_parts = original_name.split()
@@ -231,6 +221,7 @@ if __name__ == "__main__":
                 file_path = os.path.join(folder_path, file_name)
                 m13id = utility.get_file_id(file_path)
 
+                # Get the COD name
                 load_dotenv()
                 db_config = {
                     "host": os.getenv("DB_HOST"),
@@ -240,7 +231,7 @@ if __name__ == "__main__":
                     "port": os.getenv("DB_PORT"),
                 }
 
-                # Get COD name
+                # Establish connection
                 db_manager = DatabaseManager(db_config=db_config)
                 db_manager.connect()
                 name_df = db_manager.fetch_name_by_m13(m13id=m13id)
@@ -254,10 +245,9 @@ if __name__ == "__main__":
                     anonymized_text, original_name, original_phone = anonymize(
                         original_conversation, name
                     )
-                    # print(anonymized_text)
+
                     cleaned_text = utility.clean_html_styling(anonymized_text)
                     output = prompt_openai(cleaned_text, m13id)
-                    # print(output)
 
                     # Clean up JSON string
                     output = utility.clean_json(input_string=output)
@@ -271,6 +261,7 @@ if __name__ == "__main__":
                     # Safeguard against errors if name/phone number not properly anonymized
                     if contact is not None:
                         contact.id = m13id  # IMPORTANT
+                        contact.init_level()  # IMPORTANT: Initialize level
                         if contact.name == NAME_PLACEHOLDER:
                             logging.debug(
                                 f"Changed {contact.name} into {original_name}"
@@ -295,7 +286,9 @@ if __name__ == "__main__":
                 processed_files += 1
                 logging.info(f"Processed {processed_files}/{total_files} files.")
 
+                db_manager.disconnect()
+
             except Exception as e:
-                logging.error(f"Error processing file {file_name}: {e}")
+                logging.error(f"MAIN - Error processing file {file_name}: {e}")
 
     logging.info(f"Completed processing {processed_files} out of {total_files} files.")

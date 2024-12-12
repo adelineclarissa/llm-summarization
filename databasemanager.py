@@ -15,7 +15,7 @@ class DatabaseManager:
     def connect(self):
         self.db_connection.connect()
 
-    def close(self):
+    def disconnect(self):
         self.db_connection.close()
 
     # ******************* FETCH FUNCTIONS *******************

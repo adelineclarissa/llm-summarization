@@ -37,7 +37,7 @@ class Contact:
 
     @property
     def level(self):
-        if not hasattr(self, "_level"):  # Check if `_level` exists
+        if self._level == None:
             self.init_level()
         return self._level
 
@@ -157,6 +157,7 @@ class Contact:
     def init_level(self):
         if self.kecamatan == "" or self.kecamatan == None:
             logging.warning("self.kecamatan is empty or None")
+            # TODO: proceed with the logic as explained by Audris
             return
         kecamatan_input = self.kecamatan
 
@@ -205,10 +206,10 @@ class Contact:
                         self.address = kecamatan_input
 
                     # Debug
-                    print(f"Change field {category} to {kecamatan_input}")
+                    logging.debug(f"Change field {category} to {kecamatan_input}")
                     break
             else:
-                print("No match found in any category.")
+                logging.warning("No match found in any category.")
                 return
 
-        self._level = level
+        self.level = level

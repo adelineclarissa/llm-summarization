@@ -8,16 +8,20 @@ from bs4 import BeautifulSoup
 from typing import List
 from rapidfuzz import process
 
-logging.basicConfig(
-    level=logging.DEBUG,  # Set the logging level to DEBUG to capture all messages
-    format="%(asctime)s - %(levelname)s - %(message)s",
-    handlers=[
-        logging.FileHandler("app_debug.log"),  # Log file name
-        logging.StreamHandler(),  # Continue to print to console as well
-    ],
-)
-logging.getLogger("httpcore").setLevel(logging.WARNING)
-logging.getLogger("httpx").setLevel(logging.WARNING)
+
+def setup_logging(logfile: str):
+    if not logfile.endswith(".log"):
+        logfile = f"{logfile}.log"
+    logging.basicConfig(
+        level=logging.DEBUG,  # Set the logging level to DEBUG to capture all messages
+        format="%(asctime)s - %(levelname)s - %(message)s",
+        handlers=[
+            logging.FileHandler(logfile),  # Log file name
+            logging.StreamHandler(),  # Continue to print to console as well
+        ],
+    )
+    logging.getLogger("httpcore").setLevel(logging.WARNING)
+    logging.getLogger("httpx").setLevel(logging.WARNING)
 
 
 def parse_json_to_contact(json_data):
@@ -44,7 +48,6 @@ def parse_json_to_contact(json_data):
             "kecamatan": data.get("address_kecamatan_result", ""),
             "address": data.get("address_detail_result", ""),
         }
-
         return Contact(**contact_info)
     except json.decoder.JSONDecodeError as e:
         # Extract the line and column that caused the error
