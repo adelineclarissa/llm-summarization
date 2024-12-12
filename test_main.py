@@ -2,7 +2,6 @@ import os
 from unittest.mock import MagicMock
 import openai
 import logging
-import time
 import utility
 
 
@@ -13,55 +12,55 @@ def mock_prompt_openai(text, m13id):
     ```json
 {
     "name_result": "Tian",
-    "name_reasoning": "Nama kontak telah dinyatakan sebagai 'Tian' dalam percakapan.",
-    "name_confidence": "100",
-    "occupation_result": "Ibu Rumah Tangga",
-    "occupation_reasoning": "Kontak membahas tentang anak-anak dan situasi di rumah tangga, yang menunjukkan dia berfokus pada kegiatan domestik.",
-    "occupation_confidence": "85",
+    "name_reasoning": "The contact's name is anonymized as 'Tian'.",
+    "name_confidence": "100%",
+    "occupation_result": "",
+    "occupation_reasoning": "The conversation indicates that Tian is currently not successfully running a business and is involved in informal work, but no specific occupation is provided.",
+    "occupation_confidence": "60%",
     "education_result": "SMA",
-    "education_reasoning": "Dalam percakapan, kontak menyebutkan pendidikan terakhirnya adalah 'SMA'.",
-    "education_confidence": "90",
-    "age_result": "45",
-    "age_reasoning": "Kontak menyebutkan bahwa dia berusia 45 tahun dalam percakapan.",
-    "age_confidence": "95",
-    "handphone_result": "082188375719",
-    "handphone_reasoning": "Nomor tersebut disediakan oleh kontak sebagai nomor yang dapat dihubungi.",
-    "handphone_confidence": "95",
-    "marriage_result": "Menikah",
-    "marriage_reasoning": "Kontak menyebutkan suami dan anak-anak, menunjukkan bahwa dia menikah.",
-    "marriage_confidence": "90",
-    "persona_initial_problem": "Sakit dan ingin sembuh.",
-    "persona_initial_theme": "Kesehatan/Penyakit",
-    "persona_pressing_problem": "Menghadapi masalah mental dan masalah keluarga.",
-    "persona_pressing_theme": "Hubungan/Keluarga",
-    "gender_result": "Perempuan",
-    "gender_reasoning": "Konteks percakapan menunjukkan bahwa kontak adalah seorang ibu dan merujuk kepada suaminya.",
-    "gender_confidence": "95",
-    "address_province_result": "Sulawesi Selatan",
-    "address_province_reasoning": "Kontak menyebutkan tinggal di Makassar, yang terletak di Sulawesi Selatan.",
-    "address_province_confidence": "90",
-    "address_city_result": "Makassar",
-    "address_city_reasoning": "Kontak menyebutkan langsung 'Makassar' sebagai lokasi tinggal.",
-    "address_city_confidence": "90",
-    "address_kecamatan_result": "Biringkanaya",
-    "address_kecamatan_reasoning": "Kontak menyebutkan kecamatan tempat tinggalnya sebagai 'Biringkanaya'.",
-    "address_kecamatan_confidence": "90",
+    "education_reasoning": "Tian mentions having graduated from 'SMA' during the conversation.",
+    "education_confidence": "90%",
+    "age_result": "52",
+    "age_reasoning": "Tian explicitly states that he is 52 years old.",
+    "age_confidence": "100%",
+    "handphone_result": "082143633180",
+    "handphone_reasoning": "Tian provides this phone number during the conversation.",
+    "handphone_confidence": "100%",
+    "marriage_result": "Lajang",
+    "marriage_reasoning": "There is no information indicating that Tian is married; he mentions only himself and converses as an individual.",
+    "marriage_confidence": "70%",
+    "persona_initial_problem": "Merasa gelisah setelah pandemi.",
+    "persona_initial_theme": "Spiritual (Rohani)",
+    "persona_pressing_problem": "Belum mendapatkan petunjuk dari Allah.",
+    "persona_pressing_theme": "Spiritual (Rohani)",
+    "gender_result": "",
+    "gender_reasoning": "The gender is not explicitly stated in the conversation, but the context suggests a male speaker.",
+    "gender_confidence": "70%",
+    "address_province_result": "Jawa Timur",
+    "address_province_reasoning": "Tian mentions living in Banyuwangi, which is in East Java (Jawa Timur).",
+    "address_province_confidence": "90%",
+    "address_city_result": "Banyuwangi",
+    "address_city_reasoning": "Tian states that he lives in 'banyuwangi'.",
+    "address_city_confidence": "90%",
+    "address_kecamatan_result": "Licin",
+    "address_kecamatan_reasoning": "Tian mentions 'Kec Licin' while discussing where he lives.",
+    "address_kecamatan_confidence": "90%",
     "address_detail_result": "",
-    "address_detail_reasoning": "Tidak ada detail tambahan yang diberikan dalam percakapan.",
-    "address_detail_confidence": "70",
+    "address_detail_reasoning": "Specific details beyond the kecamatan and city are not provided in the conversation.",
+    "address_detail_confidence": "70%",
     "suku_result": "",
-    "suku_reasoning": "Tidak ada referensi atau penyebutan suku dalam percakapan.",
-    "suku_confidence": "100",
+    "suku_reasoning": "No ethnic group or tribe is mentioned during the conversation.",
+    "suku_confidence": "100%",
     "status_hp_result": "WA",
-    "status_hp_reasoning": "Kontak memberikan nomor telpon untuk dihubungi via pesan, menunjukkan penggunaan WhatsApp.",
-    "status_hp_confidence": "90",
-    "attitude_result": "Open",
-    "attitude_reasoning": "Kontak menunjukkan keterbukaan untuk berdiskusi tentang isu-isu spiritual dan kesehatan, serta ingin tahu lebih banyak.",
-    "attitude_confidence": "80",
-    "comments": "COD mengungkapkan masalah kesehatan dan ingin sembuh, serta membahas tantangan mental yang dihadapinya. Ia menunjukkan minat untuk mengenal lebih dalam tentang spiritualitas.",
-    "comments_idn": "COD mengungkapkan masalah kesehatan dan ingin sembuh, serta membahas tantangan mental yang dihadapinya. Ia menunjukkan minat untuk mengenal lebih dalam tentang spiritualitas.",
-    "recommendation": "Ajak COD untuk diskusi lebih lanjut tentang Isa Al-Masih, berikan perhatian pada masalah yang dihadapinya, dan tunjukkan empati.",
-    "extra_info": "COD merasa nyaman berkomunikasi melalui pesan, dan memperlihatkan keinginan untuk membuka komunikasi lebih lanjut."
+    "status_hp_reasoning": "Tian provides his phone number for further communication, implying he has WhatsApp.",
+    "status_hp_confidence": "90%",
+    "attitude_result": "Open (Terbuka)",
+    "attitude_reasoning": "Tian expresses willingness to learn about how to become clean from sin and engages in the conversation positively.",
+    "attitude_confidence": "80%",
+    "comments": "COD expressed feelings of distress and discussed his relationship with sin, showing openness to seek guidance.",
+    "comments_idn": "COD mengekspresikan perasaan gelisah dan mendiskusikan hubungannya dengan dosa, menunjukkan keterbukaan untuk mencari bimbingan.",
+    "recommendation": "Approach Tian with compassionate dialogue about faith and personal growth, offering resources for studying.",
+    "extra_info": "Tian is open to conversations about faith and personal issues; schedule for further discussion via WhatsApp."
 }
 ```
 
@@ -87,7 +86,7 @@ if __name__ == "__main__":
     m13id = "A 1234"
 
     # Set up logging
-    logging.basicConfig(level=logging.DEBUG)
+    utility.setup_logging(logfile="test_main")
 
     # Test the mocked prompt_openai function
     response = mock_prompt_openai(conversation_text, m13id)

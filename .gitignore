@@ -167,8 +167,10 @@ messages*/
 
 # Test related
 test*/
-test.xlsx
-test.txt
+test*
+
+# Ignore all .xlsx files
+*.xlsx
 
 # Scripts
 script.py
