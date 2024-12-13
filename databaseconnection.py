@@ -1,5 +1,4 @@
 import mysql.connector
-from utility import setup_logging
 import logging
 
 logger = logging.getLogger(__name__)

@@ -7,12 +7,33 @@ import utility
 from dotenv import load_dotenv
 from httpx import HTTPStatusError
 import time
-from utility import setup_logging
+
 
 PHONE_PLACEHOLDER = "08123456789"
 NAME_PLACEHOLDER = "Tian"
 
-setup_logging(logfile="main")
+
+def setup_logging():
+    # instantiate logger
+    logger = logging.getLogger()
+    logger.setLevel(logging.INFO)
+
+    # formatter
+    formatter = logging.Formatter(
+        "%(asctime)s - %(levelname)s - %(name)s - %(message)s"
+    )
+
+    # stream handler
+    stream_handler = logging.StreamHandler()
+    stream_handler.setFormatter(formatter)
+
+    # file handler
+    file_handler = logging.FileHandler("app_debug.log")
+    file_handler.setFormatter(formatter)
+
+    # add handlers to logger
+    logger.addHandler(stream_handler)
+    logger.addHandler(file_handler)
 
 
 # Anonymizes a full name in a conversation, accounting for first, middle (if any), and last names.
@@ -162,7 +183,7 @@ def prompt_openai(text, m13id):
                 messages=prompt,
             )
             output = completion.choices[0].message.content
-            logging.debug(output)
+            logger.debug(output)
             return output
         except openai.APIError.InvalidRequestError as e:
             if "maximum context length" in str(
@@ -180,19 +201,19 @@ def prompt_openai(text, m13id):
                 return None
         except HTTPStatusError as e:
             if e.response.status_code == 429:
-                logging.error(
+                logger.error(
                     f"Rate limit exceeded for conversation ID: {m13id}. Attempt {attempt + 1} of {retries}."
                 )
                 if attempt < retries - 1:
                     time.sleep(delay)  # Wait before retrying
                     delay *= backoff_factor  # Exponential backoff
                 else:
-                    logging.error(
+                    logger.error(
                         f"All retry attempts failed for conversation ID: {m13id}. Please wait and try again later."
                     )
                     return None
             else:
-                logging.error(
+                logger.error(
                     f"HTTP error for conversation ID: {m13id}. Status: {e.response.status_code}. Error: {e}"
                 )
                 return None
@@ -202,6 +223,9 @@ def prompt_openai(text, m13id):
 
 
 if __name__ == "__main__":
+    setup_logging()
+    logger = logging.getLogger(__name__)
+
     # Get input from console
     folder_path = input("Please enter folder path: ")
     excel_file = input("Please enter excel file for the output: ")
@@ -255,7 +279,7 @@ if __name__ == "__main__":
                     # Convert the JSON into a Contact object
                     contact = utility.parse_json_to_contact(json_data=output)
                     if contact is None:
-                        logging.error(f"Contact is None")
+                        logger.error(f"Contact is None")
 
                     # Update the original name and phone number in the contact object
                     # Safeguard against errors if name/phone number not properly anonymized
@@ -263,12 +287,10 @@ if __name__ == "__main__":
                         contact.id = m13id  # IMPORTANT
                         contact.init_level()  # IMPORTANT: Initialize level
                         if contact.name == NAME_PLACEHOLDER:
-                            logging.debug(
-                                f"Changed {contact.name} into {original_name}"
-                            )
+                            logger.debug(f"Changed {contact.name} into {original_name}")
                             contact.name = original_name
                         if contact.phone_number == PHONE_PLACEHOLDER:
-                            logging.debug(
+                            logger.debug(
                                 f"Changed {contact.phone_number} into {original_phone}"
                             )
                             contact.phone_number = original_phone
@@ -284,11 +306,11 @@ if __name__ == "__main__":
 
                 # Increment the counter and log the progress
                 processed_files += 1
-                logging.info(f"Processed {processed_files}/{total_files} files.")
+                logger.info(f"Processed {processed_files}/{total_files} files.")
 
                 db_manager.disconnect()
 
             except Exception as e:
-                logging.error(f"MAIN - Error processing file {file_name}: {e}")
+                logger.error(f"MAIN - Error processing file {file_name}: {e}")
 
-    logging.info(f"Completed processing {processed_files} out of {total_files} files.")
+    logger.info(f"Completed processing {processed_files} out of {total_files} files.")

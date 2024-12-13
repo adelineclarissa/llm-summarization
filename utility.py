@@ -8,20 +8,7 @@ from bs4 import BeautifulSoup
 from typing import List
 from rapidfuzz import process
 
-
-def setup_logging(logfile: str):
-    if not logfile.endswith(".log"):
-        logfile = f"{logfile}.log"
-    logging.basicConfig(
-        level=logging.DEBUG,  # Set the logging level to DEBUG to capture all messages
-        format="%(asctime)s - %(levelname)s - %(message)s",
-        handlers=[
-            logging.FileHandler(logfile),  # Log file name
-            logging.StreamHandler(),  # Continue to print to console as well
-        ],
-    )
-    logging.getLogger("httpcore").setLevel(logging.WARNING)
-    logging.getLogger("httpx").setLevel(logging.WARNING)
+logger = logging.getLogger(__name__)
 
 
 def parse_json_to_contact(json_data):
@@ -58,7 +45,7 @@ def parse_json_to_contact(json_data):
         column_error = e.colno  # Column number where the error occurred
 
         # Log the error with detailed information, including the exact line and column content
-        logging.error(
+        logger.error(
             "Failed to parse JSON data into a Contact object. "
             "The provided data might be malformed or incomplete. "
             f"Error: {e.msg} at line {e.lineno}, column {e.colno}. "
@@ -71,13 +58,13 @@ def parse_json_to_contact(json_data):
         )
     except KeyError as e:
         # If a key is missing from the expected JSON structure, log that error explicitly
-        logging.error(
+        logger.error(
             f"Missing expected key in the parsed JSON data: {e}. "
             f"Input data: {json_data[:200]}"  # Log the first 200 characters of the JSON data
         )
     except Exception as e:
         # Catch any other general errors and log them
-        logging.error(
+        logger.error(
             f"An unexpected error occurred when processing the JSON data. Error: {e}. "
             f"Input data: {json_data[:200]}"  # Log the first 200 characters of the JSON data
         )
@@ -120,9 +107,13 @@ def contacts_to_excel(contacts, excel_file_name):
         headers = EXCEL_HEADERS
         ws.append(headers)
 
+    skip_count = 0
+    skip_ids = []
     for contact in contacts:
         if contact is None:
-            logging.error("Contact is None in contacts_to_excel. Skipping...")
+            logger.error("Contact is None. Skipping...")
+            skip_count = skip_count + 1
+            skip_ids.append(contact.id)
             continue
         row_data = [
             str(contact.id),
@@ -146,7 +137,12 @@ def contacts_to_excel(contacts, excel_file_name):
             str(contact.summary),
         ]
         ws.append(row_data)
-
+    if skip_ids:
+        logger.warning(
+            f"Skipped {skip_count} files with ids: {', '.join(map(str, skip_ids))}"
+        )
+    else:
+        logger.info("Yay! No skipped files!")
     wb.save(excel_file_name)
 
 
@@ -154,13 +150,13 @@ def contacts_to_excel(contacts, excel_file_name):
 def get_file_id(file_path):
     pattern = r"([A-Z])\s(\d{4})"
     file_name = os.path.basename(file_path)
-    logging.debug(f"Extracted file name: {file_name}")
+    logger.debug(f"Extracted file name: {file_name}")
     match = re.search(pattern, file_name)
     if match:
-        logging.info(f"Match found: {match.group(0)}")
+        logger.info(f"Match found: {match.group(0)}")
         return f"{match.group(1)} {match.group(2)}"
     else:
-        logging.info("No match found.")
+        logger.info("No match found.")
         return None
 
 
@@ -197,13 +193,13 @@ def clean_json(input_string):
 def get_file_id(file_path):
     pattern = r"([A-Z])\s(\d{4})"
     file_name = os.path.basename(file_path)
-    logging.debug(f"Extracted file name: {file_name}")
+    logger.debug(f"Extracted file name: {file_name}")
     match = re.search(pattern, file_name)
     if match:
-        logging.info(f"Match found: {match.group(0)}")
+        logger.info(f"Match found: {match.group(0)}")
         return f"{match.group(1)} {match.group(2)}"
     else:
-        logging.info("No match found.")
+        logger.info("No match found.")
         return None
 
 

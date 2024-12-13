@@ -5,6 +5,29 @@ import logging
 import utility
 
 
+def setup_logging():
+    # instantiate logger
+    logger = logging.getLogger()
+    logger.setLevel(logging.DEBUG)
+
+    # formatter
+    formatter = logging.Formatter(
+        "%(asctime)s - %(levelname)s - %(name)s - %(message)s"
+    )
+
+    # stream handler
+    stream_handler = logging.StreamHandler()
+    stream_handler.setFormatter(formatter)
+
+    # file handler
+    file_handler = logging.FileHandler("app_debug.log")
+    file_handler.setFormatter(formatter)
+
+    # add handlers to logger
+    logger.addHandler(stream_handler)
+    logger.addHandler(file_handler)
+
+
 # Mock the OpenAI API client
 def mock_prompt_openai(text, m13id):
     # Simulate the API response you expect
@@ -79,22 +102,22 @@ openai.OpenAI.chat.completions.create = mock_prompt_openai
 
 # Test the API mock integration in the program
 if __name__ == "__main__":
+    setup_logging()
+    logger = logging.getLogger(__name__)
+
     # Simulate an input conversation text and m13id
     conversation_text = (
         "This is a mock conversation where we talk about career and personal issues."
     )
     m13id = "A 1234"
 
-    # Set up logging
-    utility.setup_logging(logfile="test_main")
-
     # Test the mocked prompt_openai function
     response = mock_prompt_openai(conversation_text, m13id)
-    print(f"response type: {type(response)}")
+    logger.debug(f"response type: {type(response)}")
 
     # Testing utility functions
     response = utility.clean_json(input_string=response)
-    print(f"After clean up: \n{response}")
+    logger.debug(f"After clean up: \n{response}")
 
     contact = utility.parse_json_to_contact(json_data=response)
     utility.contacts_to_excel(contacts=[contact], excel_file_name="mock_test.xlsx")
