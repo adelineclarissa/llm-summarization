@@ -3,6 +3,8 @@ import pandas as pd
 from dataclasses import dataclass, field
 import logging
 
+logger = logging.getLogger(__name__)
+
 
 class Category(Enum):
     PROVINCE = "province"
@@ -61,10 +63,10 @@ class Contact:
             return None
 
         # Normalize the name if variable district has 'kota'
-        # logging.debug(f"Before normalization: {city}")
+        # logger.debug(f"Before normalization: {city}")
         # if city.lower().split()[0] == "kota":
         #     city = " ".join(city.split()[1:])
-        # logging.debug(f"After normalization: {city}")
+        # logger.debug(f"After normalization: {city}")
 
         # BYPASS: if kota_kab_result has "kota", return the level as kota
         if kota_kab_result.lower().split()[0] == "kota":
@@ -84,10 +86,10 @@ class Contact:
             index = match_index.idxmax()
             district_level = words[index][0]
             # print(f"The level of district {district} is {district_level}")
-            logging.info(f"Match found: {kota_kab_result} is a {district_level}")
+            logger.info(f"Match found: {kota_kab_result} is a {district_level}")
             return district_level
         else:
-            logging.warning(f"City {kota_kab_result} not found in the dataset.")
+            logger.warning(f"City {kota_kab_result} not found in the dataset.")
             return None
 
     def _validate(self, addr_input, category: Category):
@@ -119,7 +121,7 @@ class Contact:
                 all_df[categories[category]].str.lower() == addr_input.lower()
             ]
             if not filtered_df.empty:
-                print(f"LOG: {addr_input} is a {category}")
+                logger.debug(f"{addr_input} is a {category}")
                 return (True, filtered_df)
             else:
                 return (False, None)
@@ -156,7 +158,7 @@ class Contact:
 
     def init_level(self):
         if self.kecamatan == "" or self.kecamatan == None:
-            logging.warning("self.kecamatan is empty or None")
+            logger.warning("self.kecamatan is empty or None")
             # TODO: proceed with the logic as explained by Audris
             return
         kecamatan_input = self.kecamatan
@@ -185,7 +187,7 @@ class Contact:
         if isValid:
             # find level
             kota_kab_result = district_df.iloc[0]["admin2Name_en"]
-            logging.info(f"Mencari level dari kota/kab {str(kota_kab_result)}")
+            logger.info(f"Mencari level dari kota/kab {str(kota_kab_result)}")
             level = self._find_level(kota_kab_result)
         else:
             level = None
@@ -206,10 +208,10 @@ class Contact:
                         self.address = kecamatan_input
 
                     # Debug
-                    logging.debug(f"Change field {category} to {kecamatan_input}")
+                    logger.debug(f"Change field {category} to {kecamatan_input}")
                     break
             else:
-                logging.warning("No match found in any category.")
+                logger.warning("No match found in any category.")
                 return
 
         self.level = level
