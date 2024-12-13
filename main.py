@@ -226,26 +226,21 @@ if __name__ == "__main__":
     setup_logging()
     logger = logging.getLogger(__name__)
 
-    # Get input from console
     folder_path = input("Please enter folder path: ")
     excel_file = input("Please enter excel file for the output: ")
     excel_file = utility.validate_excel(filename=excel_file)
 
-    # Initialize contacts
-    contacts_list = []
-
-    # Initialize counters for debugging
     total_files = len([f for f in os.listdir(folder_path) if f.endswith(".txt")])
     processed_files = 0
+    skipped_ids = []
 
-    # Process one folder
+    # process one folder
     for file_name in os.listdir(folder_path):
         if file_name.endswith(".txt"):
             try:
                 file_path = os.path.join(folder_path, file_name)
                 m13id = utility.get_file_id(file_path)
 
-                # Get the COD name
                 load_dotenv()
                 db_config = {
                     "host": os.getenv("DB_HOST"),
@@ -255,13 +250,13 @@ if __name__ == "__main__":
                     "port": os.getenv("DB_PORT"),
                 }
 
-                # Establish connection
+                # get the contact's name from database
                 db_manager = DatabaseManager(db_config=db_config)
                 db_manager.connect()
                 name_df = db_manager.fetch_name_by_m13(m13id=m13id)
                 name = name_df.to_string(index=False, header=False)
 
-                # LOG: output for json dump
+                # output for json dump
                 output = ""
 
                 with open(file_path, "r") as file:
@@ -272,17 +267,11 @@ if __name__ == "__main__":
 
                     cleaned_text = utility.clean_html_styling(anonymized_text)
                     output = prompt_openai(cleaned_text, m13id)
-
-                    # Clean up JSON string
                     output = utility.clean_json(input_string=output)
-
-                    # Convert the JSON into a Contact object
                     contact = utility.parse_json_to_contact(json_data=output)
-                    if contact is None:
-                        logger.error(f"Contact is None")
 
-                    # Update the original name and phone number in the contact object
-                    # Safeguard against errors if name/phone number not properly anonymized
+                    # update the original name and phone number in the contact object
+                    # safeguard against errors if name/phone number not properly anonymized
                     if contact is not None:
                         contact.id = m13id  # IMPORTANT
                         contact.init_level()  # IMPORTANT: Initialize level
@@ -294,23 +283,33 @@ if __name__ == "__main__":
                                 f"Changed {contact.phone_number} into {original_phone}"
                             )
                             contact.phone_number = original_phone
+                    else:
+                        logger.error(f"Contact is NONE")
 
-                    utility.contacts_to_excel(
-                        contacts=[contact], excel_file_name=excel_file
-                    )
+                    success = utility.contact_to_excel(contact, excel_file)
+                    if not success:
+                        skipped_ids.append(contact.id)
 
                 # LOG: output json dump into a txt file
                 dumpfile = f"test-output-dump/{m13id}-dump.txt"
                 with open(dumpfile, "w") as f:
                     f.write(output)
 
-                # Increment the counter and log the progress
+                # increment the counter and log the progress
                 processed_files += 1
                 logger.info(f"Processed {processed_files}/{total_files} files.")
 
                 db_manager.disconnect()
 
             except Exception as e:
-                logger.error(f"MAIN - Error processing file {file_name}: {e}")
+                logger.error(f"Error processing file {file_name}: {e}")
 
-    logger.info(f"Completed processing {processed_files} out of {total_files} files.")
+    if skipped_ids:
+        logger.warning(
+            f"Skipped {len(skipped_ids)} files with IDs: {', '.join(skipped_ids)}"
+        )
+    else:
+        # TODO: we can change this into just printing a success message, after we debug the logic
+        logger.info(
+            f"Completed processing {processed_files} out of {total_files} files."
+        )

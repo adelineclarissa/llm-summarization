@@ -94,56 +94,49 @@ EXCEL_HEADERS = [
 ]
 
 
-def contacts_to_excel(contacts, excel_file_name):
+# returns True if success, False if contact is None
+def contact_to_excel(contact, excel_file_name):
+
+    if contact is None:
+        logger.error(f"Contact is None for ID {contact.id}. Skipping...")
+        return False
+
+    # open workbook
     if os.path.exists(excel_file_name):
         wb = openpyxl.load_workbook(excel_file_name)
         ws = wb.active
         headers = [cell.value for cell in ws[1]]  # Read the first row as headers
     else:
-        # Create a new Excel workbook and select the active worksheet
         wb = openpyxl.Workbook()
         ws = wb.active
         ws.title = "Contacts"
         headers = EXCEL_HEADERS
         ws.append(headers)
 
-    skip_count = 0
-    skip_ids = []
-    for contact in contacts:
-        if contact is None:
-            logger.error("Contact is None. Skipping...")
-            skip_count = skip_count + 1
-            skip_ids.append(contact.id)
-            continue
-        row_data = [
-            str(contact.id),
-            str(contact.name),
-            str(contact.attitude),
-            str(contact.phone_number),
-            str(contact.persona),
-            str(contact.status_hp),
-            str(contact.suku),
-            str(contact.gender),
-            str(contact.province),
-            str(contact.age),
-            str(contact.level),  # 'level' is now directly accessed as a property
-            str(contact.education),
-            str(contact.city),
-            str(contact.occupation),
-            str(contact.kecamatan),
-            str(contact.marriage),
-            str(contact.address),
-            str(contact.extra_info),
-            str(contact.summary),
-        ]
-        ws.append(row_data)
-    if skip_ids:
-        logger.warning(
-            f"Skipped {skip_count} files with ids: {', '.join(map(str, skip_ids))}"
-        )
-    else:
-        logger.info("Yay! No skipped files!")
+    row_data = [
+        str(contact.id),
+        str(contact.name),
+        str(contact.attitude),
+        str(contact.phone_number),
+        str(contact.persona),
+        str(contact.status_hp),
+        str(contact.suku),
+        str(contact.gender),
+        str(contact.province),
+        str(contact.age),
+        str(contact.level),  # 'level' is now directly accessed as a property
+        str(contact.education),
+        str(contact.city),
+        str(contact.occupation),
+        str(contact.kecamatan),
+        str(contact.marriage),
+        str(contact.address),
+        str(contact.extra_info),
+        str(contact.summary),
+    ]
+    ws.append(row_data)
     wb.save(excel_file_name)
+    return True
 
 
 # This function extracts and returns the ID in the format "<A-Z> <4 digit numbers>" from a file path

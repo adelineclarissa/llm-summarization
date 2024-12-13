@@ -120,4 +120,4 @@ if __name__ == "__main__":
     logger.debug(f"After clean up: \n{response}")
 
     contact = utility.parse_json_to_contact(json_data=response)
-    utility.contacts_to_excel(contacts=[contact], excel_file_name="mock_test.xlsx")
+    utility.contact_to_excel(contacts=[contact], excel_file_name="mock_test.xlsx")
