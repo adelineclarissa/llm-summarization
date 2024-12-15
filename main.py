@@ -270,8 +270,7 @@ if __name__ == "__main__":
                     output = utility.clean_json(input_string=output)
                     contact = utility.parse_json_to_contact(json_data=output)
 
-                    # update the original name and phone number in the contact object
-                    # safeguard against errors if name/phone number not properly anonymized
+                    # safeguard the process because if contact is None, exceptions will be thrown
                     if contact is not None:
                         contact.id = m13id  # IMPORTANT
                         contact.init_level()  # IMPORTANT: Initialize level
@@ -283,14 +282,16 @@ if __name__ == "__main__":
                                 f"Changed {contact.phone_number} into {original_phone}"
                             )
                             contact.phone_number = original_phone
+                        # parse contact and output it in excel
+                        success = utility.contact_to_excel(contact, excel_file)
+
                     else:
-                        logger.error(f"Contact is NONE")
+                        logger.error(
+                            f"Contact is None. Appending ID to the skipped_id list."
+                        )
+                        skipped_ids.append(m13id)
 
-                    success = utility.contact_to_excel(contact, excel_file)
-                    if not success:
-                        skipped_ids.append(contact.id)
-
-                # LOG: output json dump into a txt file
+                # LOG - output json dump into a txt file
                 dumpfile = f"test-output-dump/{m13id}-dump.txt"
                 with open(dumpfile, "w") as f:
                     f.write(output)
@@ -302,14 +303,15 @@ if __name__ == "__main__":
                 db_manager.disconnect()
 
             except Exception as e:
+                # TODO: give more explanation about the exception
                 logger.error(f"Error processing file {file_name}: {e}")
 
+    # finally
     if skipped_ids:
         logger.warning(
-            f"Skipped {len(skipped_ids)} files with IDs: {', '.join(skipped_ids)}"
+            f"Processed {processed_files}/{total_files} files. Skipped {len(skipped_ids)} files with IDs: {', '.join(skipped_ids)}"
         )
     else:
-        # TODO: we can change this into just printing a success message, after we debug the logic
         logger.info(
-            f"Completed processing {processed_files} out of {total_files} files."
-        )
+            f"Successfully processed all files in the folder."
+        )  # see if this works lol

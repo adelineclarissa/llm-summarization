@@ -51,10 +51,6 @@ def parse_json_to_contact(json_data):
             f"Error: {e.msg} at line {e.lineno}, column {e.colno}. "
             f"Problematic line: '{error_line.strip()}'"
             f"\n{' ' * (column_error - 1)}^ <-- Error at column {column_error}. "
-            "Input data (up to 200 chars): %s",
-            json_data[
-                :200
-            ],  # Log the first 200 characters of the JSON data for context
         )
     except KeyError as e:
         # If a key is missing from the expected JSON structure, log that error explicitly
@@ -98,7 +94,9 @@ EXCEL_HEADERS = [
 def contact_to_excel(contact, excel_file_name):
 
     if contact is None:
-        logger.error(f"Contact is None for ID {contact.id}. Skipping...")
+        logger.error(
+            f"Contact is None for ID {contact.id}. Skipping..."
+        )  # NOTE: Raises an exception if contact is None
         return False
 
     # open workbook
