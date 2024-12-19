@@ -270,7 +270,7 @@ if __name__ == "__main__":
                     output = utility.clean_json(input_string=output)
                     contact = utility.parse_json_to_contact(json_data=output)
 
-                    # safeguard the process because if contact is None, exceptions will be thrown
+                    # prevent exceptions in the next block if contact is None
                     if contact is not None:
                         contact.id = m13id  # IMPORTANT
                         contact.init_level()  # IMPORTANT: Initialize level
@@ -287,7 +287,7 @@ if __name__ == "__main__":
 
                     else:
                         logger.error(
-                            f"Contact is None. Appending ID to the skipped_id list."
+                            f"Contact is None. Appending ID '{m13id}' to the skipped_id list."
                         )
                         skipped_ids.append(m13id)
 
